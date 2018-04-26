@@ -1,0 +1,16 @@
+group 'udina2261'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.xerial:sqlite-jdbc:3.16.1'
+    compile "com.google.code.gson:gson:2.8.0"
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
