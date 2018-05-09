@@ -10,6 +10,14 @@ import static spark.Spark.*;
 
 public class main {
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
+        ProcessBuilder process = new ProcessBuilder();
+        if (process.environment().get("PORT") != null) {
+            port(Integer.parseInt(process.environment().get("PORT")));
+        } else {
+            port(8080);
+        }
+
+
         Class.forName("org.sqlite.JDBC");
         Connection conn = DriverManager.getConnection("jdbc:sqlite:db.sqlite");
 
