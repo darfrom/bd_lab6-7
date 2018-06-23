@@ -1,6 +1,11 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.stream.JsonWriter;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +14,16 @@ import static spark.Spark.*;
 
 
 public class main {
-    public static void main(String[] args) throws ClassNotFoundException, SQLException {
+    private static void addBAction(ResultSet rs, JsonWriter js) throws IOException, SQLException {
+//        System.out.println(rs.);
+        js.beginObject()
+                .name("status").value(rs.getString("status"))
+                .name("actionID").value(rs.getInt("action_id"))
+                .name("link").value(rs.getString("link"));
+        js.name("comment").value(rs.getString("comment"));
+        js.endObject();
+    }
+    public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
         ProcessBuilder process = new ProcessBuilder();
         if (process.environment().get("PORT") != null) {
             port(Integer.parseInt(process.environment().get("PORT")));
@@ -22,65 +36,65 @@ public class main {
         Connection conn = DriverManager.getConnection("jdbc:sqlite:db.sqlite");
 
         Statement stmt = conn.createStatement();
-        stmt.execute("CREATE TABLE if not exists `Users` (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    " `name` text, `surname` text, `patronymic` text, `meansOfCommunication_id` integer," +
-                    " FOREIGN KEY(meansOfCommunication_id) REFERENCES MeansOfCommunication(id));");
 
-        stmt.execute("CREATE TABLE if not exists `Studios` (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
-                " `name` text, `address_id` integer," +
-                " FOREIGN KEY(address_id) REFERENCES Address(id));");
-
-        stmt.execute("CREATE TABLE if not exists `MeansOfCommunication` (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    " `phoneNomber` text, `email` text, `user_id` integer," +
-                    " FOREIGN KEY(user_id) REFERENCES Users(id));");
-
-        stmt.execute("CREATE TABLE if not exists `Address` (`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    " `city` text, `street` text, `building` text, `studio_id` integer," +
-                    " FOREIGN KEY(studio_id) REFERENCES Studio(id));");
-
+        stmt.execute("CREATE TABLE if not exists `Users` (" +
+                "`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "`email` text," +
+                "`address`  text," +
+                "`salt` text," +
+                "`password` text);" );
+        stmt.execute("CREATE TABLE if not exists `BActions` (" +
+                //"`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "`user_id` integer, " +
+                "`action_id` integer," +
+                "`status` text," +
+                "`comment` text," +
+                "`link` text," +
+                "PRIMARY KEY (user_id, action_id)," +
+                "FOREIGN KEY (user_id) REFERENCES Users(id));");
 
         Gson gson = new GsonBuilder().create();
 
         PreparedStatement ps1 = conn.prepareStatement(
-                "INSERT INTO `users` (name, surname, patronymic, meansOfCommunication_id) VALUES (?, ?, ?, ?)"
+                "INSERT INTO `users` (email, address, salt, password) VALUES (?, ?, ?, ?)"
         );
 
-        User user = new User(1, "Masha", "Vasileva" , "Vitalevna", 10);
-        System.out.println(gson.toJson(user));
-
-        String userStr = gson.toJson(user);
-        User user2 = gson.fromJson(userStr, User.class);
-
-        ps1.setString(1, user2.name);
-        ps1.setString(2, user2.surname);
-        ps1.setString(3, user2.patronymic);
-        ps1.setInt(4, user2.meansOfCommunication_id);
-        ps1.executeUpdate();
-
-
+//        User user = new User(1, "asd@m.ru", "1asdsf1484" , "xzxzxz", "d5f8r4g9" );
+//        System.out.println(gson.toJson(user));
+//
+//        String userStr = gson.toJson(user);
+//        User user2 = gson.fromJson(userStr, User.class);
+//
+//        ps1.setString(1, user2.email);
+//        ps1.setString(2, user2.address);
+//        ps1.setString(3, user2.salt);
+//        ps1.setString(4, user2.password);
+//        ps1.executeUpdate();
 
 
-        get("/users", (request,response) -> {
-            response.type("application/json");
-            PreparedStatement stmnt = conn.prepareStatement(
-                    "SELECT * FROM `users`"
-            );
-
-            ResultSet rs = stmnt.executeQuery();
-            List<User> users = new ArrayList<>();
-            while (rs.next()){
-                users.add(new User(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("surname"),
-                        rs.getString("patronymic"),
-                        rs.getInt("meansOfCommunication_id"))
-                );
-            }
-            return users;
-        }, gson::toJson);
 
 
+//        get("/users", (request,response) -> {
+//            response.type("application/json");
+//            PreparedStatement stmnt = conn.prepareStatement(
+//                    "SELECT * FROM `users`"
+//            );
+//
+//            ResultSet rs = stmnt.executeQuery();
+//            List<User> users = new ArrayList<>();
+//            while (rs.next()){
+//                users.add(new User(
+//                        rs.getInt("id"),
+//                        rs.getString("email"),
+//                        rs.getString("address"),
+//                        rs.getString("salt"),
+//                        rs.getString("password"))
+//                );
+//            }
+//            return users;
+//        }, gson::toJson);
+
+//хз как приплести bActiond
         get("/users/:id",(request,response)->{
             int userID = Integer.parseInt(request.params("id"));
 
@@ -90,17 +104,31 @@ public class main {
             stmnt.setInt(1, userID);
             ResultSet rs = stmnt.executeQuery();
             List<User> users = new ArrayList<>();
-            while (rs.next()){
-                users.add(new User(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getString("surname"),
-                        rs.getString("patronymic"),
-                        rs.getInt("meansOfCommunication_id"))
-                );
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            JsonWriter js = new JsonWriter(new OutputStreamWriter(out,"UTF-8"));
+
+            if (rs.next()){
+                js.beginObject()
+                    .name("id").value(rs.getInt("id"))
+                    .name("email").value(rs.getString("email"))
+                    .name("address").value(rs.getString("address"))
+                    .name("salt").value(rs.getString("salt"))
+                    .name("pwd").value(rs.getString("password"));
+                PreparedStatement bActStm = conn.prepareStatement("SELECT * FROM `bActions` WHERE `user_id` = ?");
+                bActStm.setInt(1, rs.getInt("id"));
+                ResultSet bActionsRows = bActStm.executeQuery();
+                if(bActionsRows.next()){
+                    js.name("bActions").beginArray();
+                    addBAction(bActionsRows,js);
+                    while (bActionsRows.next()) addBAction(bActionsRows, js);
+                    js.endArray();
+                }
+                js.endObject().close();
             }
-            return users;
-        },gson::toJson);
+            String result = new String(out.toByteArray(),"UTF-8");
+            return result;
+        });
 
 
         delete("/users/:id",(request,response)->{
@@ -114,190 +142,118 @@ public class main {
         });
 
 
-        post("/users",(request,response)->{
+        post("/registration",(request,response)->{
             User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
-                    "INSERT INTO `users` (name, surname, patronymic, meansOfCommunication_id) VALUES (?, ?, ?, ?)"
+                    "INSERT INTO `Users` (email, password) VALUES (?, ?)"
             );
 
-            stmnt.setString(1, userPost.name);
-            stmnt.setString(2, userPost.surname);
-            stmnt.setString(3, userPost.patronymic);
-            stmnt.setInt(4, userPost.meansOfCommunication_id);
-            stmnt.executeUpdate();
-
-
-            // добавление новой записив таблицу `users`
-            return "INSERT";
-        });
-
-
-        put("/users/:id",(request,response)->{
-            int userID = Integer.parseInt(request.params("id"));
-            User userPut = gson.fromJson(request.body(), User.class);
-
-            PreparedStatement stmnt = conn.prepareStatement(
-                    "UPDATE `users` SET `name`=?, `surname`=?, `patronymic`=?, `meansOfCommunication_id`=? WHERE `id`=?"
+            PreparedStatement test = conn.prepareStatement(
+                    "SELECT * FROM `Users` WHERE `email` = ?"
             );
-            stmnt.setInt(5, userID);
-
-            stmnt.setString(1, userPut.name);
-            stmnt.setString(2, userPut.surname);
-            stmnt.setString(3, userPut.patronymic);
-            stmnt.setInt(4, userPut.meansOfCommunication_id);
-            stmnt.executeUpdate();
-
-            // добавление новой записив таблицу `users`
-            return "UPDATE";
-        });
-
-
-
-
-
-
-
-        PreparedStatement ps2 = conn.prepareStatement(
-                "INSERT INTO `studios` (name, address_id)  VALUES (?, ?)"
-        );
-
-        Studios studio = new Studios(1, "Str", 5);
-        System.out.println(gson.toJson(studio));
-
-
-        String studioStr = gson.toJson(studio);
-        Studios studio2 = gson.fromJson(studioStr, Studios.class);
-
-        ps2.setString(1, studio2.name);
-        ps2.setInt(2, studio2.address_id);
-        ps2.executeUpdate();
-
-
-
-        get("/studios", (request,response) -> {
-            response.type("application/json");
-            PreparedStatement stmnt = conn.prepareStatement(
-                    "SELECT * FROM `studios`"
-            );
-
-            ResultSet rs = stmnt.executeQuery();
-            List<Studios> studios = new ArrayList<>();
-            while (rs.next()){
-                studios.add(new Studios(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("address_id"))
-                );
+            test.setString(1, userPost.email);
+            ResultSet rs = test.executeQuery();
+            if (!rs.next()) {
+                stmnt.setString(1, userPost.email);
+                stmnt.setString(2, userPost.password);
+                stmnt.executeUpdate();
+                return "\"done\"";
+            } else {
+                return "\"fail\"";
             }
-            return studios;
-        }, gson::toJson);
+
+        });
 
 
-        get("/studios/:id",(request,response)->{
-            int studioID = Integer.parseInt(request.params("id"));
+        post("/login",(request,response)->{
+            User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
-                    "SELECT * FROM `studios` WHERE `id` = ?"
+                    "INSERT INTO `Users` (email, password) VALUES (?, ?)"
             );
-            stmnt.setInt(1, studioID);
-            ResultSet rs = stmnt.executeQuery();
-            List<Studios> studios = new ArrayList<>();
-            while (rs.next()){
-                studios.add(new Studios(
-                        rs.getInt("id"),
-                        rs.getString("name"),
-                        rs.getInt("address_id"))
-                );
+
+            PreparedStatement test = conn.prepareStatement(
+                    "SELECT * FROM `Users` WHERE `email` = ? AND `password` = ?"
+            );
+            test.setString(1, userPost.email);
+            test.setString(2, userPost.password);
+            ResultSet rs = test.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            } else {
+                return "\"fail\"";
             }
-            return studios;
-        },gson::toJson);
 
-
-        delete("/studios/:id",(request,response)->{
-            int studioID = Integer.parseInt(request.params("id"));
-            PreparedStatement stmnt = conn.prepareStatement(
-                    "DELETE FROM `studios` WHERE `id` = ?"
-            );
-            stmnt.setInt(1, studioID);
-            stmnt.executeUpdate();
-            return "DELETE";
         });
 
 
-        post("/studios",(request,response)->{
-            Studios studioPost = gson.fromJson(request.body(), Studios.class);
+//        put("/users/:id",(request,response)->{
+//            int userID = Integer.parseInt(request.params("id"));
+//            User userPut = gson.fromJson(request.body(), User.class);
+//
+//            PreparedStatement stmnt = conn.prepareStatement(
+//                    "UPDATE `Users` SET `email`=?, `address`=?, `salt`=?, `password`=? WHERE `id`=?"
+//
+//            );
+//            stmnt.setInt(5, userID);
+//
+//            stmnt.setString(1, userPut.email);
+//            stmnt.setString(2, userPut.address);
+//            stmnt.setString(3, userPut.salt);
+//            stmnt.setString(4, userPut.password);
+//            stmnt.executeUpdate();
+//
+//            // добавление новой записив таблицу `users`
+//            return "UPDATE";
+//        });
+
+
+
+//--------------------------------------------------------------------------
+
+//        get("/bactions", (request,response) -> {
+//            response.type("application/json");
+//            PreparedStatement stmnt = conn.prepareStatement(
+//                    "SELECT * FROM `BActions`"
+//            );
+//
+//            ResultSet rs = stmnt.executeQuery();
+//            List<BActions> bactions = new ArrayList<>();
+//            while (rs.next()){
+//                bactions.add(new BActions(
+//                        rs.getInt("user_id"),
+//                        rs.getInt("action_id"),
+//                        rs.getString("status"),
+//                        rs.getString("comment"),
+//                        rs.getString("link"))
+//                );
+//            }
+//            return bactions;
+//        }, gson::toJson);
+
+
+        post("/bactions",(request,response)->{
+            BActions bactionPost = gson.fromJson(request.body(), BActions.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
-                    "INSERT INTO `studios` (name, address_id) VALUES (?, ?)"
+                    "INSERT INTO `BActions` (user_id, action_id, status, comment, link) VALUES (?, ?, ?, ?, ?)"
             );
 
-            stmnt.setString(1, studioPost.name);;
-            stmnt.setInt(2, studioPost.address_id);
-            stmnt.executeUpdate();
-
+            stmnt.setInt(1, bactionPost.user_id);
+            stmnt.setInt(2, bactionPost.action_id);
+            stmnt.setString(3, bactionPost.status);
+            stmnt.setString(4, bactionPost.comment);
+            stmnt.setString(5, bactionPost.link);
+            try {
+                stmnt.executeUpdate();
+            } catch (Exception e){
+                return "\"you already has same action_id \"";
+            }
 
             // добавление новой записив таблицу `users`
-            return "INSERT";
+            return "\"done\"";
         });
 
-
-        put("/studios/:id",(request,response)->{
-            int studioID = Integer.parseInt(request.params("id"));
-            Studios studioPut = gson.fromJson(request.body(), Studios.class);
-
-            PreparedStatement stmnt = conn.prepareStatement(
-                    "UPDATE `studios` SET `name`=?, `address_id`=? WHERE `id`=?"
-            );
-            stmnt.setInt(3, studioID);
-
-            stmnt.setString(1, studioPut.name);
-            stmnt.setInt(2, studioPut.address_id);
-            stmnt.executeUpdate();
-
-            // добавление новой записив таблицу `users`
-            return "UPDATE";
-        });
-
-//        ps1.setString(1, "Ivan"); // вместо первого "?" подставляется строка "Ivan"
-//        ps1.executeUpdate();
-//        ps1.setString(1, "Petr"); // вместо первого "?" подставляется строка "Petr"
-//        ps1.executeUpdate();
-
-//        PreparedStatement ps1 = conn.prepareStatement(
-//                "INSERT INTO `users` (name) VALUES (?)"
-//        );
-
-//        ps1.setString(1, "Ivan"); // вместо первого "?" подставляется строка "Ivan"
-//        ps1.executeUpdate();
-//        ps1.setString(1, "Petr"); // вместо первого "?" подставляется строка "Petr"
-//        ps1.executeUpdate();
-
-
-//        int userId = 1;
-//        PreparedStatement ps2 = conn.prepareStatement(
-//                "SELECT * FROM `users` WHERE `name` = ?"
-//        );
-//        ps2.setString(1, "Ivan");
-//        ResultSet rs = ps2.executeQuery();
-//
-//        while(rs.next()) {
-//            System.out.println(rs.getInt("id") + ": " + rs.getString("name"));
-//        }
-//
-//
-//
-//        Gson gson = new GsonBuilder().create();
-//
-//        User user = new User(10, "Denis");
-//        System.out.println(gson.toJson(user));
-//
-//        String userStr = gson.toJson(user);
-//        User user2 = gson.fromJson(userStr, User.class);
-//
-//        ps1.setString(1, user2.name);
-//        ps1.executeUpdate();
     }
-
 }
-
