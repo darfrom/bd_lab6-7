@@ -2,11 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="21ff2374-0f56-41cb-b9d5-515e2407e6c7" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db.sqlite" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/classes/User.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/classes/main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/classes/main.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/User.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/main.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.gradle/" />
@@ -39,8 +34,8 @@
       <file leaf-file-name="main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-162">
-              <caret line="214" column="50" lean-forward="true" selection-start-line="214" selection-start-column="50" selection-end-line="214" selection-end-column="50" />
+            <state relative-caret-position="195">
+              <caret line="112" column="34" lean-forward="true" selection-start-line="112" selection-start-column="34" selection-end-line="112" selection-end-column="34" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -818,8 +813,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-162">
-          <caret line="214" column="50" lean-forward="true" selection-start-line="214" selection-start-column="50" selection-end-line="214" selection-end-column="50" />
+        <state relative-caret-position="195">
+          <caret line="112" column="34" lean-forward="true" selection-start-line="112" selection-start-column="34" selection-end-line="112" selection-end-column="34" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>

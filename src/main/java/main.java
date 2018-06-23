@@ -110,11 +110,9 @@ public class main {
 
             if (rs.next()){
                 js.beginObject()
-                    .name("id").value(rs.getInt("id"))
+//                    .name("id").value(rs.getInt("id"))
                     .name("email").value(rs.getString("email"))
-                    .name("address").value(rs.getString("address"))
-                    .name("salt").value(rs.getString("salt"))
-                    .name("pwd").value(rs.getString("password"));
+                    .name("address").value(rs.getString("address"));
                 PreparedStatement bActStm = conn.prepareStatement("SELECT * FROM `bActions` WHERE `user_id` = ?");
                 bActStm.setInt(1, rs.getInt("id"));
                 ResultSet bActionsRows = bActStm.executeQuery();
