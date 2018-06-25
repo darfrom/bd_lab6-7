@@ -96,6 +96,7 @@ public class main {
 
 //хз как приплести bActiond
         get("/users/:id",(request,response)->{
+            response.header("Access-Control-Allow-Origin","*");
             int userID = Integer.parseInt(request.params("id"));
 
             PreparedStatement stmnt = conn.prepareStatement(
