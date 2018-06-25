@@ -54,7 +54,6 @@ public class main {
                 "FOREIGN KEY (user_id) REFERENCES Users(id));");
 
         Gson gson = new GsonBuilder().create();
-
         PreparedStatement ps1 = conn.prepareStatement(
                 "INSERT INTO `users` (email, address, salt, password) VALUES (?, ?, ?, ?)"
         );
@@ -142,6 +141,7 @@ public class main {
 
 
         post("/registration",(request,response)->{
+            response.header("Access-Control-Allow-Origin","*");
             User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
@@ -166,6 +166,7 @@ public class main {
 
 
         post("/login",(request,response)->{
+            response.header("Access-Control-Allow-Origin","*");
             User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
@@ -233,17 +234,16 @@ public class main {
 
 
         post("/bactions",(request,response)->{
+            response.header("Access-Control-Allow-Origin","*");
             BActions bactionPost = gson.fromJson(request.body(), BActions.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
-                    "INSERT INTO `BActions` (user_id, action_id, status, comment, link) VALUES (?, ?, ?, ?, ?)"
+                    "INSERT INTO `BActions` (user_id, action_id, link, status) VALUES (?, ?, ?, \"pending\")"
             );
 
             stmnt.setInt(1, bactionPost.user_id);
             stmnt.setInt(2, bactionPost.action_id);
-            stmnt.setString(3, bactionPost.status);
-            stmnt.setString(4, bactionPost.comment);
-            stmnt.setString(5, bactionPost.link);
+            stmnt.setString(3, bactionPost.link);
             try {
                 stmnt.executeUpdate();
             } catch (Exception e){
