@@ -2,10 +2,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +13,11 @@ import static spark.Spark.*;
 public class main {
     private static void addBAction(ResultSet rs, JsonWriter js) throws IOException, SQLException {
 //        System.out.println(rs.);
+        String action = BActions.actions[rs.getInt("action_id")];
         js.beginObject()
                 .name("status").value(rs.getString("status"))
-                .name("actionID").value(rs.getInt("action_id"))
+                .name("action").value(action)
+                .name("price").value(300)
                 .name("link").value(rs.getString("link"));
         js.name("comment").value(rs.getString("comment"));
         js.endObject();
@@ -142,6 +141,7 @@ public class main {
 
         post("/registration",(request,response)->{
             response.header("Access-Control-Allow-Origin","*");
+            System.out.println(request.body());
             User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
@@ -161,7 +161,6 @@ public class main {
             } else {
                 return "\"fail\"";
             }
-
         });
 
 
@@ -236,13 +235,16 @@ public class main {
         post("/bactions",(request,response)->{
             response.header("Access-Control-Allow-Origin","*");
             BActions bactionPost = gson.fromJson(request.body(), BActions.class);
-
+            System.out.println(bactionPost.getId());
+            if (bactionPost.getId() < 0) {
+                return "fail: this action is not exist";
+            }
             PreparedStatement stmnt = conn.prepareStatement(
                     "INSERT INTO `BActions` (user_id, action_id, link, status) VALUES (?, ?, ?, \"pending\")"
             );
 
             stmnt.setInt(1, bactionPost.user_id);
-            stmnt.setInt(2, bactionPost.action_id);
+            stmnt.setInt(2, bactionPost.getId());
             stmnt.setString(3, bactionPost.link);
             try {
                 stmnt.executeUpdate();
