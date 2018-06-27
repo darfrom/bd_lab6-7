@@ -72,25 +72,38 @@ public class main {
 
 
 
-//        get("/users", (request,response) -> {
-//            response.type("application/json");
-//            PreparedStatement stmnt = conn.prepareStatement(
-//                    "SELECT * FROM `users`"
-//            );
-//
-//            ResultSet rs = stmnt.executeQuery();
-//            List<User> users = new ArrayList<>();
-//            while (rs.next()){
-//                users.add(new User(
-//                        rs.getInt("id"),
-//                        rs.getString("email"),
-//                        rs.getString("address"),
-//                        rs.getString("salt"),
-//                        rs.getString("password"))
-//                );
-//            }
-//            return users;
-//        }, gson::toJson);
+        get("/users/af0c7d70649b9fd518903c8b147a341c9dd3b4bec9c13ceda824528e788a7446", (request,response) -> {
+            response.type("application/json");
+            response.header("Access-Control-Allow-Origin","*");
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            JsonWriter js = new JsonWriter(new OutputStreamWriter(out,"UTF-8"));
+            PreparedStatement stmnt = conn.prepareStatement(
+                    "SELECT * FROM `users`"
+            );
+            js.beginArray();
+            ResultSet rs = stmnt.executeQuery();
+            List<User> users = new ArrayList<>();
+            while (rs.next()){
+                js.beginObject();
+                js.name("email").value( rs.getString("email"));
+                js.name("address").value( rs.getString("address"));
+                PreparedStatement bActStm = conn.prepareStatement("SELECT * FROM `bActions` WHERE `user_id` = ?");
+                bActStm.setInt(1, rs.getInt("id"));
+                ResultSet bActionsRows = bActStm.executeQuery();
+                if(bActionsRows.next()){
+                    js.name("bActions").beginArray();
+                    addBAction(bActionsRows,js);
+                    while (bActionsRows.next()) addBAction(bActionsRows, js);
+                    js.endArray();
+                }
+                js.endObject();
+            }
+            js.endArray();
+            js.close();
+            System.out.println(new String(out.toByteArray(),"UTF-8"));
+            return new String(out.toByteArray(),"UTF-8");
+        });
 
 //хз как приплести bActiond
         get("/users/:id",(request,response)->{
@@ -141,7 +154,6 @@ public class main {
 
         post("/registration",(request,response)->{
             response.header("Access-Control-Allow-Origin","*");
-            System.out.println(request.body());
             User userPost = gson.fromJson(request.body(), User.class);
 
             PreparedStatement stmnt = conn.prepareStatement(
