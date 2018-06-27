@@ -34,7 +34,8 @@ public class main {
         js.name("comment").value(rs.getString("comment"));
         js.endObject();
     }
-    public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException {
+    public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException, URISyntaxException {
+        getConnection();
         ProcessBuilder process = new ProcessBuilder();
         if (process.environment().get("PORT") != null) {
             port(Integer.parseInt(process.environment().get("PORT")));
