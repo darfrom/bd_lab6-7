@@ -92,7 +92,7 @@ public class main {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             JsonWriter js = new JsonWriter(new OutputStreamWriter(out,"UTF-8"));
             PreparedStatement stmnt = conn.prepareStatement(
-                    "SELECT * FROM `users`"
+                    "SELECT * FROM users"
             );
             js.beginArray();
             ResultSet rs = stmnt.executeQuery();
@@ -101,7 +101,7 @@ public class main {
                 js.beginObject();
                 js.name("email").value( rs.getString("email"));
                 js.name("address").value( rs.getString("address"));
-                PreparedStatement bActStm = conn.prepareStatement("SELECT * FROM `bActions` WHERE `user_id` = ?");
+                PreparedStatement bActStm = conn.prepareStatement("SELECT * FROM bActions WHERE user_id = ?");
                 bActStm.setInt(1, rs.getInt("id"));
                 ResultSet bActionsRows = bActStm.executeQuery();
                 if(bActionsRows.next()){
