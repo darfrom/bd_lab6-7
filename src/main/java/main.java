@@ -50,7 +50,7 @@ public class main {
         Statement stmt = conn.createStatement();
 
         stmt.execute("CREATE TABLE if not exists `Users` (" +
-                "`id` INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "`id` INTEGER PRIMARY KEY AUTO_INCREMENT," +
                 "`email` text," +
                 "`address`  text," +
                 "`salt` text," +
@@ -62,8 +62,8 @@ public class main {
                 "`status` text," +
                 "`comment` text," +
                 "`link` text," +
-                "PRIMARY KEY (user_id, action_id)," +
-                "FOREIGN KEY (user_id) REFERENCES Users(id));");
+                "CONSTRAINT PRIMARY KEY (user_id, action_id)," +
+                "CONSTRAINT FOREIGN KEY (user_id) REFERENCES Users(id));");
 
         Gson gson = new GsonBuilder().create();
         PreparedStatement ps1 = conn.prepareStatement(
