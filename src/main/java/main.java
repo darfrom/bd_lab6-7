@@ -3,6 +3,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,16 @@ import static spark.Spark.*;
 
 
 public class main {
+    private static Connection getConnection() throws URISyntaxException, SQLException {
+        URI jdbUri = new URI(System.getenv("JAWSDB_URL"));
+        System.out.println(System.getenv("JAWSDB_URL"));
+        String username = jdbUri.getUserInfo().split(":")[0];
+        String password = jdbUri.getUserInfo().split(":")[1];
+        String port = String.valueOf(jdbUri.getPort());
+        String jdbUrl = "jdbc:mysql://" + jdbUri.getHost() + ":" + port + jdbUri.getPath();
+
+        return DriverManager.getConnection(jdbUrl, username, password);
+    }
     private static void addBAction(ResultSet rs, JsonWriter js) throws IOException, SQLException {
 //        System.out.println(rs.);
         String action = BActions.actions[rs.getInt("action_id")];
