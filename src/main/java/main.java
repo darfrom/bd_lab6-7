@@ -124,7 +124,7 @@ public class main {
             int userID = Integer.parseInt(request.params("id"));
 
             PreparedStatement stmnt = conn.prepareStatement(
-                    "SELECT * FROM `users` WHERE `id` = ?"
+                    "SELECT * FROM users WHERE id = ?"
             );
             stmnt.setInt(1, userID);
             ResultSet rs = stmnt.executeQuery();
