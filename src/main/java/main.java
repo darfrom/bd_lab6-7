@@ -35,7 +35,7 @@ public class main {
         js.endObject();
     }
     public static void main(String[] args) throws ClassNotFoundException, SQLException, IOException, URISyntaxException {
-        getConnection();
+
         ProcessBuilder process = new ProcessBuilder();
         if (process.environment().get("PORT") != null) {
             port(Integer.parseInt(process.environment().get("PORT")));
@@ -45,7 +45,7 @@ public class main {
 
 
         Class.forName("org.sqlite.JDBC");
-        Connection conn = DriverManager.getConnection("jdbc:sqlite:db.sqlite");
+        Connection conn = getConnection();//DriverManager.getConnection("jdbc:sqlite:db.sqlite");
 
         Statement stmt = conn.createStatement();
 
